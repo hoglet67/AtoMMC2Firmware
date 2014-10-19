@@ -7,6 +7,8 @@
 #include "ff.h"
 #include "wildcard.h"
 
+#pragma udata fildata
+
 BYTE res;
 
 BYTE globalIndex;
@@ -19,10 +21,8 @@ DIR dir;
 int filenum = -1;
 
 
-#pragma udata fildata
 FILINFO filinfodata[4];
 FIL fildata[4];
-#pragma udata
 
 FATFS fatfs;
 
@@ -34,7 +34,7 @@ char	WildPattern[WILD_LEN+1];
 
 #ifdef INCLUDE_SDDOS
 
-extern BYTE sectorData[];
+unsigned char *sectorData = &(fildata[3].buf);
 
 DWORD sectorInBuffer = 0xffffffff;
 
@@ -45,6 +45,7 @@ DWORD globalLBAOffset;
 
 #endif
 
+#pragma udata
 
 // use only immediately after open
 extern void get_fileinfo_special(FILINFO *);

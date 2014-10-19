@@ -58,7 +58,7 @@ typedef struct
 }
 imgInfo;
 
-extern unsigned char sectorData[];
+extern unsigned char *sectorData;
 
 #endif
 

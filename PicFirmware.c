@@ -26,13 +26,6 @@ char windowData[512];
 char globalData[256];
 #pragma udata
 
-#ifdef INCLUDE_SDDOS
-#pragma udata sectorbuf
-char sectorData[512];
-#pragma udata
-#endif
-
-
 BYTE configByte;
 BYTE blVersion;
 
