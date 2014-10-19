@@ -1,7 +1,10 @@
 #include "platform.h"
 
 #include "atmmc2.h"
-#include "..\shared\config.h"
+
+// Build issue on Linux
+// TODO: Check with Charlie whether this is important
+//#include "..\shared\config.h"
 
 #include <string.h>
 #include <delays.h>
@@ -163,7 +166,9 @@ void main(void)
 
    CardType = 0;     // no card
 
-   CLOCKINIT();
+   // Build issue on Linux
+   // TODO: Check with Charlie whether this is important
+   // CLOCKINIT();
 
    // ensure all ADC channels, comparators are off
    //
