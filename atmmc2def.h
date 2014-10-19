@@ -72,6 +72,10 @@
 #define ERROR_INVALID_DRIVE	0x09
 #define ERROR_READ_ONLY		0x0A
 #define ERROR_ALREADY_MOUNT	0x0A
+#define ERROR_TOO_MANY_OPEN	0x12
+
+// Offset returned file numbers by 0x20, to disambiguate from errors
+#define FILENUM_OFFSET		0x20
 
 // STATUS_REG bit masks
 //

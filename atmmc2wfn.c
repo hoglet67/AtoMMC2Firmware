@@ -55,6 +55,7 @@ extern void get_fileinfo_special(FILINFO *);
 
 void at_initprocessor(void)
 {
+   int i;
    rwmode = 0;
 
    fatfs.win = windowData;
@@ -65,6 +66,10 @@ void at_initprocessor(void)
 
   f_chdrive(0);
   f_mount(0, &fatfs);
+  
+  for (i = 0; i < 4; i++) {
+    fildata[i].fs = NULL;
+  }
 }
 
 
@@ -245,15 +250,41 @@ void wfnSetCWDirectory(void)
 
 static BYTE fileOpen(BYTE mode)
 {
-  FIL *fil = &fildata[filenum];
-  return 0x40 | f_open(fil, (const char*)globalData, mode);
+  int ret;
+  if (filenum == 0) {
+    // The scratch file is fixed, so we are backwards compatible with 2.9 firmware
+    ret = f_open(&fildata[0], (const char*)globalData, mode);
+  } else {
+    // If a random access file is being opened, search for the first available FIL
+    filenum = 0;
+    if (!fildata[1].fs) {
+      filenum = 1;
+    } else if (!fildata[2].fs) {
+      filenum = 2;
+    } else if (!fildata[3].fs) {
+      filenum = 3;
+    }
+    if (filenum > 0) {
+      ret = f_open(&fildata[filenum], (const char*)globalData, mode);
+      if (!ret) { 
+	// No error, so update the return value to indicate the file num
+	ret = FILENUM_OFFSET | filenum;
+      }
+    } else {
+      // All files are open, return too many open files
+      ret = ERROR_TOO_MANY_OPEN;
+    } 
+  }
+  return STATUS_COMPLETE | ret;
 }
 
 void wfnFileOpenRead(void)
 {
-   FILINFO *filinfo = &filinfodata[filenum];
    res = fileOpen(FA_OPEN_EXISTING|FA_READ);
-   get_fileinfo_special(filinfo);
+   if (filenum < 4) { 
+     FILINFO *filinfo = &filinfodata[filenum];
+     get_fileinfo_special(filinfo);
+   }
    WriteDataPort(STATUS_COMPLETE | res);
 }
 
