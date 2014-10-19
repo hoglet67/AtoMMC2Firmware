@@ -24,6 +24,7 @@
 #define CMD_FILE_OPEN_WRITE	0x13
 #define CMD_FILE_DELETE		0x14
 #define CMD_FILE_GETINFO	0x15
+#define CMD_FILE_SEEK		0x16
 
 #define CMD_INIT_READ		0x20
 #define CMD_INIT_WRITE		0x21

@@ -15,8 +15,15 @@ BYTE globalDataPresent;
 BYTE rwmode;
 
 DIR dir;
-FIL fil;
-FILINFO filinfo;
+
+int filenum = -1;
+
+
+#pragma udata fildata
+FILINFO filinfodata[4];
+FIL fildata[4];
+#pragma udata
+
 FATFS fatfs;
 
 extern BYTE windowData[];
@@ -133,6 +140,7 @@ void wfnDirectoryOpen(void)
 
 void wfnDirectoryRead(void)
 {
+  FILINFO *filinfo = &filinfodata[0];
    char len;
 	int	Match;
 
@@ -140,8 +148,8 @@ void wfnDirectoryRead(void)
 	{
 		char n = 0;
 
-		res = f_readdir(&dir, &filinfo);
-		if (res != FR_OK || !filinfo.fname[0])
+		res = f_readdir(&dir, filinfo);
+		if (res != FR_OK || !filinfo->fname[0])
 		{
 			// done
 			WriteDataPort(STATUS_COMPLETE | res);
@@ -150,21 +158,21 @@ void wfnDirectoryRead(void)
 
 		// Check to see if filename matches current wildcard
 		//
-		Match=wildcmp(WildPattern,filinfo.fname);
-		//log0("WildPattern=%s, filinfo.fname=%s, Match=%d\n",WildPattern,filinfo.fname,Match);
+		Match=wildcmp(WildPattern,filinfo->fname);
+		//log0("WildPattern=%s, filinfo->fname=%s, Match=%d\n",WildPattern,filinfo->fname,Match);
 		if(Match)
 		{
-			len = (char)strlen(filinfo.fname);
+			len = (char)strlen(filinfo->fname);
 
-			if (filinfo.fattrib & AM_DIR)	
+			if (filinfo->fattrib & AM_DIR)	
 			{
 				n = 1;
 				globalData[0] = '<';
 			}
 
-			strcpy((char*)&globalData[n], (const char*)filinfo.fname);
+			strcpy((char*)&globalData[n], (const char*)filinfo->fname);
 
-			if (filinfo.fattrib & AM_DIR)
+			if (filinfo->fattrib & AM_DIR)
 			{
 				globalData[len+1] = '>';
 				globalData[len+2] = 0;
@@ -173,8 +181,8 @@ void wfnDirectoryRead(void)
 
 			// just for giggles put the attribute & filesize in the buffer
 			//
-			globalData[len+1] = filinfo.fattrib;
-			memcpy(&globalData[len+2], (void*)(&filinfo.fsize), sizeof(DWORD));
+			globalData[len+1] = filinfo->fattrib;
+			memcpy(&globalData[len+2], (void*)(filinfo->fsize), sizeof(DWORD));
 
 			WriteDataPort(STATUS_OK);
 			return;
@@ -187,7 +195,7 @@ void wfnDirectoryRead(void)
       char n = 0;
 
       res = f_readdir(&dir, &filinfo);
-      if (res != FR_OK || !filinfo.fname[0])
+      if (res != FR_OK || !filinfo->fname[0])
       {
          // done
          WriteDataPort(STATUS_COMPLETE | res);
@@ -196,17 +204,17 @@ void wfnDirectoryRead(void)
 
       // no LFNs here ;)
       //
-      len = (char)strlen(filinfo.fname);
+      len = (char)strlen(filinfo->fname);
 
-      if (filinfo.fattrib & AM_DIR)
+      if (filinfo->fattrib & AM_DIR)
       {
          n = 1;
          globalData[0] = '<';
       }
 
-      strcpy((char*)&globalData[n], (const char*)filinfo.fname);
+      strcpy((char*)&globalData[n], (const char*)filinfo->fname);
 
-      if (filinfo.fattrib & AM_DIR)
+      if (filinfo->fattrib & AM_DIR)
       {
          globalData[len+1] = '>';
          globalData[len+2] = 0;
@@ -215,8 +223,8 @@ void wfnDirectoryRead(void)
 
       // just for giggles put the attribute & filesize in the buffer
       //
-      globalData[len+1] = filinfo.fattrib;
-      memcpy(&globalData[len+2], (void*)(&filinfo.fsize), sizeof(DWORD));
+      globalData[len+1] = filinfo->fattrib;
+      memcpy(&globalData[len+2], (void*)(&filinfo->fsize), sizeof(DWORD));
 
       WriteDataPort(STATUS_OK);
       return;
@@ -236,13 +244,15 @@ void wfnSetCWDirectory(void)
 
 static BYTE fileOpen(BYTE mode)
 {
-   return 0x40 | f_open(&fil, (const char*)globalData, mode);
+  FIL *fil = &fildata[filenum];
+  return 0x40 | f_open(fil, (const char*)globalData, mode);
 }
 
 void wfnFileOpenRead(void)
 {
+   FILINFO *filinfo = &filinfodata[filenum];
    res = fileOpen(FA_OPEN_EXISTING|FA_READ);
-   get_fileinfo_special(&filinfo);
+   get_fileinfo_special(filinfo);
    WriteDataPort(STATUS_COMPLETE | res);
 }
 
@@ -257,6 +267,8 @@ void wfnFileOpenWrite(void)
 
 void wfnFileGetInfo(void)
 {
+   FIL *fil = &fildata[filenum];
+   FILINFO *filinfo = &filinfodata[filenum];
    union
    {
       DWORD dword;
@@ -264,25 +276,25 @@ void wfnFileGetInfo(void)
    }
    dwb;
 
-   dwb.dword = fil.fsize;
+   dwb.dword = fil->fsize;
    globalData[0] = dwb.byte[0];
    globalData[1] = dwb.byte[1];
    globalData[2] = dwb.byte[2];
    globalData[3] = dwb.byte[3];
 
-   dwb.dword = (DWORD)(fil.org_clust-2) * fatfs.csize + fatfs.database;
+   dwb.dword = (DWORD)(fil->org_clust-2) * fatfs.csize + fatfs.database;
    globalData[4] = dwb.byte[0];
    globalData[5] = dwb.byte[1];
    globalData[6] = dwb.byte[2];
    globalData[7] = dwb.byte[3];
 
-   dwb.dword = fil.fptr;
+   dwb.dword = fil->fptr;
    globalData[8] = dwb.byte[0];
    globalData[9] = dwb.byte[1];
    globalData[10] = dwb.byte[2];
    globalData[11] = dwb.byte[3];
 
-   globalData[12] = filinfo.fattrib & 0x3f;
+   globalData[12] = filinfo->fattrib & 0x3f;
 
    WriteDataPort(STATUS_OK);
 }
@@ -292,13 +304,14 @@ void wfnFileGetInfo(void)
 
 void wfnFileRead(void)
 {
+   FIL *fil = &fildata[filenum];
    UINT read;
    if (globalAmount == 0)
    {
       globalAmount = 256;
    }
 
-   WriteDataPort(STATUS_COMPLETE | f_read(&fil, globalData, globalAmount, &read));
+   WriteDataPort(STATUS_COMPLETE | f_read(fil, globalData, globalAmount, &read));
 }
 
 
@@ -306,13 +319,14 @@ void wfnFileRead(void)
 
 void wfnFileWrite(void)
 {
+   FIL *fil = &fildata[filenum];
    UINT written;
    if (globalAmount == 0)
    {
       globalAmount = 256;
    }
 
-   WriteDataPort(STATUS_COMPLETE | f_write(&fil, (void*)globalData, globalAmount, &written));
+   WriteDataPort(STATUS_COMPLETE | f_write(fil, (void*)globalData, globalAmount, &written));
 }
 
 
@@ -320,7 +334,8 @@ void wfnFileWrite(void)
 
 void wfnFileClose(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_close(&fil));
+   FIL *fil = &fildata[filenum];
+   WriteDataPort(STATUS_COMPLETE | f_close(fil));
 }
 
 
@@ -333,15 +348,37 @@ void wfnFileDelete(void)
    WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)&globalData[0]));
 }
 
+void wfnFileSeek(void)
+{
+   FIL *fil = &fildata[filenum];
+
+   union
+   {
+      DWORD dword;
+      char byte[4];
+   }
+   dwb;
+   
+   dwb.byte[0] = globalData[0]; 
+   dwb.byte[1] = globalData[1]; 
+   dwb.byte[2] = globalData[2]; 
+   dwb.byte[3] = globalData[3]; 
+
+   WriteDataPort(STATUS_COMPLETE | f_lseek(fil, dwb.dword));
+}
+
+
 
 #ifdef INCLUDE_SDDOS
 
 
 BYTE tryOpenImage(imgInfo* imginf)
 {
+   FIL *fil = &fildata[0];
+   FILINFO *filinfo = &filinfodata[filenum];
    BYTE i;
 
-   res = f_open(&fil, (const XCHAR*)&imginf->filename,FA_READ);
+   res = f_open(fil, (const XCHAR*)&imginf->filename,FA_READ);
    if (FR_OK != res)
    {
       return STATUS_COMPLETE | res;
@@ -349,7 +386,7 @@ BYTE tryOpenImage(imgInfo* imginf)
 
    // see pff clust2sec()
    //
-   imginf->baseSector = (DWORD)(fil.org_clust-2) * fatfs.csize + fatfs.database;
+   imginf->baseSector = (DWORD)(fil->org_clust-2) * fatfs.csize + fatfs.database;
 
    // disallow multiple mounts of the same image
    //
@@ -370,8 +407,8 @@ BYTE tryOpenImage(imgInfo* imginf)
    // all good - should only call "get_fileinfo_special" if no other file operations
    // have occurred since the last open.
    //
-   get_fileinfo_special(&filinfo);
-   imginf->attribs = filinfo.fattrib;
+   get_fileinfo_special(filinfo);
+   imginf->attribs = filinfo->fattrib;
 
    return imginf->attribs;
 }
@@ -380,17 +417,18 @@ BYTE tryOpenImage(imgInfo* imginf)
 
 void saveDrivesImpl(void)
 {
+   FIL *fil = &fildata[0];
 #if (PLATFORM==PLATFORM_PIC)
    strcpypgm2ram((char*)&globalData[0], (const rom far char*)"BOOTDRV.CFG");
 #elif (PLATFORM==PLATFORM_AVR)
 	strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
 #endif
-   res = f_open(&fil, (const XCHAR*)globalData, FA_OPEN_ALWAYS|FA_WRITE);
+   res = f_open(fil, (const XCHAR*)globalData, FA_OPEN_ALWAYS|FA_WRITE);
    if (FR_OK == res)
    {
       UINT temp;
-      f_write(&fil, (const void*)&driveInfo[0], 4 * sizeof(imgInfo), &temp);
-      f_close(&fil);
+      f_write(fil, (const void*)&driveInfo[0], 4 * sizeof(imgInfo), &temp);
+      f_close(fil);
    }
 }
 
@@ -514,6 +552,7 @@ void wfnWriteSDDOSSect(void)
 
 void wfnValidateSDDOSDrives(void)
 {
+   FIL *fil = &fildata[0];
    BYTE i;
    BYTE* ii = (BYTE*)driveInfo;
 
@@ -528,11 +567,11 @@ void wfnValidateSDDOSDrives(void)
 
    // try to read the boot config file
    //
-   res = f_open(&fil, (const char*)globalData, FA_READ|FA_OPEN_EXISTING);
+   res = f_open(fil, (const char*)globalData, FA_READ|FA_OPEN_EXISTING);
    if (!res)
    {
       UINT temp;
-      res = f_read(&fil, (void*)(&ii[0]), 4 * sizeof(imgInfo), &temp);
+      res = f_read(fil, (void*)(&ii[0]), 4 * sizeof(imgInfo), &temp);
    }
    else
    {

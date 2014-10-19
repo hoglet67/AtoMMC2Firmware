@@ -17,6 +17,7 @@ extern unsigned char portBVal;
 extern BYTE globalIndex;
 extern WORD globalAmount;
 extern BYTE globalDataPresent;
+extern int filenum;
 
 #if (PLATFORM==PLATFORM_PIC)
 #define LatchedData		PORTD
@@ -72,6 +73,23 @@ void at_process(void)
          {
 			ReadDataPort();
             received = LatchedData;
+	    // File Group 0x10-0x17, 0x30-0x37, 0x50-0x57, 0x70-0x77
+	    // filenum = bits 6,5
+	    // mask1 = 10011000 (test for file group command)
+	    // mask2 = 10011111 (remove file number)
+	    if ((received & 0x98) == 0x10) {
+	      filenum = (received >> 5) & 3;
+	      received &= 0x9F;
+	    }
+	    
+	    // Data Group 0x20-0x23, 0x24-0x27, 0x28-0x2B, 0x2C-0x2F
+	    // filenum = bits 3,2
+	    // mask1 = 11110000 (test for data group command)
+	    // mask2 = 11110011 (remove file number)
+	    if ((received & 0xf0) == 0x20) {
+	      filenum = (received >> 2) & 3;
+	      received &= 0xF3;
+	    }
             WriteDataPort(STATUS_BUSY);
 			//log0("%02X\n",LatchedData);
 			
@@ -139,6 +157,12 @@ void at_process(void)
                // return file's status byte
                //
                worker = WFN_FileGetInfo;
+            }
+            else if (received == CMD_FILE_SEEK)
+            {
+               // seek to a location within the file
+               //
+               worker = WFN_FileSeek;
             }
             else if (received == CMD_INIT_READ)
             {
