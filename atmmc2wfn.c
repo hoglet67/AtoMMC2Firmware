@@ -1,11 +1,12 @@
-#include "atmmc2.h"
 
 #include <string.h>
-#include "atmmc2io.h"
-#include "atmmc2def.h"
 #include "diskio.h"
 #include "ff.h"
+#include "atmmc2.h"
+#include "atmmc2def.h"
 #include "wildcard.h"
+#include "atmmc2io.h"
+#include "../atom.h"
 
 BYTE res;
 
@@ -107,6 +108,8 @@ void GetWildcard(void)
 		strcpypgm2ram((char*)&WildPattern[0], (const rom far char*)"*");
 #elif (PLATFORM==PLATFORM_AVR)
 		strncpy_P(WildPattern,PSTR("*"),WILD_LEN);
+#elif (PLATFORM==PLATFORM_ATMU)
+		strncpy(WildPattern,"*",WILD_LEN);
 #endif
 	}
 	
@@ -180,48 +183,6 @@ void wfnDirectoryRead(void)
 			return;
 		}
 	}
-
-#if 0
-   while (1)
-   {
-      char n = 0;
-
-      res = f_readdir(&dir, &filinfo);
-      if (res != FR_OK || !filinfo.fname[0])
-      {
-         // done
-         WriteDataPort(STATUS_COMPLETE | res);
-         return;
-      }
-
-      // no LFNs here ;)
-      //
-      len = (char)strlen(filinfo.fname);
-
-      if (filinfo.fattrib & AM_DIR)
-      {
-         n = 1;
-         globalData[0] = '<';
-      }
-
-      strcpy((char*)&globalData[n], (const char*)filinfo.fname);
-
-      if (filinfo.fattrib & AM_DIR)
-      {
-         globalData[len+1] = '>';
-         globalData[len+2] = 0;
-         len += 2; // brackets
-      }
-
-      // just for giggles put the attribute & filesize in the buffer
-      //
-      globalData[len+1] = filinfo.fattrib;
-      memcpy(&globalData[len+2], (void*)(&filinfo.fsize), sizeof(DWORD));
-
-      WriteDataPort(STATUS_OK);
-      return;
-   }
-#endif
 }
 
 
@@ -250,10 +211,6 @@ void wfnFileOpenWrite(void)
 {
    WriteDataPort(STATUS_COMPLETE | fileOpen(FA_CREATE_NEW|FA_WRITE));
 }
-
-
-
-
 
 void wfnFileGetInfo(void)
 {
@@ -287,9 +244,6 @@ void wfnFileGetInfo(void)
    WriteDataPort(STATUS_OK);
 }
 
-
-
-
 void wfnFileRead(void)
 {
    UINT read;
@@ -300,9 +254,6 @@ void wfnFileRead(void)
 
    WriteDataPort(STATUS_COMPLETE | f_read(&fil, globalData, globalAmount, &read));
 }
-
-
-
 
 void wfnFileWrite(void)
 {
@@ -315,22 +266,15 @@ void wfnFileWrite(void)
    WriteDataPort(STATUS_COMPLETE | f_write(&fil, (void*)globalData, globalAmount, &written));
 }
 
-
-
-
 void wfnFileClose(void)
 {
    WriteDataPort(STATUS_COMPLETE | f_close(&fil));
 }
 
-
-
-
-
-
 void wfnFileDelete(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)&globalData[0]));
+	f_close(&fil);
+	WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)&globalData[0]));
 }
 
 
@@ -341,7 +285,10 @@ BYTE tryOpenImage(imgInfo* imginf)
 {
    BYTE i;
 
-   res = f_open(&fil, (const XCHAR*)&imginf->filename,FA_READ);
+//rpclog("tryOpenImage(%s)\n",imginf->filename);
+
+//   res = f_open(&fil, (const XCHAR*)&imginf->filename,FA_READ);
+   res = f_open(&imginf->fp, (const XCHAR*)&imginf->filename,(FA_READ | FA_WRITE));
    if (FR_OK != res)
    {
       return STATUS_COMPLETE | res;
@@ -349,7 +296,7 @@ BYTE tryOpenImage(imgInfo* imginf)
 
    // see pff clust2sec()
    //
-   imginf->baseSector = (DWORD)(fil.org_clust-2) * fatfs.csize + fatfs.database;
+   //imginf->baseSector = (DWORD)(fil.org_clust-2) * fatfs.csize + fatfs.database;
 
    // disallow multiple mounts of the same image
    //
@@ -370,9 +317,10 @@ BYTE tryOpenImage(imgInfo* imginf)
    // all good - should only call "get_fileinfo_special" if no other file operations
    // have occurred since the last open.
    //
-   get_fileinfo_special(&filinfo);
-   imginf->attribs = filinfo.fattrib;
-
+   //get_fileinfo_special(&filinfo);
+   //imginf->attribs = filinfo.fattrib;
+   imginf->attribs = 0x00;
+	
    return imginf->attribs;
 }
 
@@ -380,10 +328,13 @@ BYTE tryOpenImage(imgInfo* imginf)
 
 void saveDrivesImpl(void)
 {
+//	rpclog("saveDrivesImpl()\n");
 #if (PLATFORM==PLATFORM_PIC)
    strcpypgm2ram((char*)&globalData[0], (const rom far char*)"BOOTDRV.CFG");
 #elif (PLATFORM==PLATFORM_AVR)
 	strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
+#elif (PLATFORM==PLATFORM_ATMU)
+	strcpy((char*)&globalData[0],"BOOTDRV.CFG");
 #endif
    res = f_open(&fil, (const XCHAR*)globalData, FA_OPEN_ALWAYS|FA_WRITE);
    if (FR_OK == res)
@@ -400,11 +351,13 @@ void wfnOpenSDDOSImg(void)
    // globalData[0] = drive number 0..3
    // globalData[1]... image filename
 
-   BYTE stat, error;
+   BYTE /*stat,*/ error;
    BYTE id = globalData[0] & 3;
 
+//rpclog("wfnOpenSDDOSImg()\n");
+
    imgInfo* image = &driveInfo[id];
-   stat = image->attribs;
+//   stat = image->attribs;
 
    memset(image, 0, sizeof(imgInfo));
    strncpy((char*)&image->filename, (const char*)&globalData[1], 13);
@@ -426,105 +379,97 @@ void wfnOpenSDDOSImg(void)
 }
 
 
-void wfnReadSDDOSSect(void)
+BYTE SDDOS_seek(void)
 {
-   BYTE returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
+	DWORD 	fpos=globalLBAOffset * SDOS_SECTOR_SIZE;
 
-   if (driveInfo[globalCurDrive].attribs != 0xff)
-   {
-      // each physical device sector holds 2 sddos sectors
-      //
-      DWORD sector = driveInfo[globalCurDrive].baseSector + globalLBAOffset / 2;
-
-      returnCode = RES_OK;
-
-      if (sector != sectorInBuffer)
-      {
-         // cache the physical sectors
-         //
-         returnCode = disk_read(0, sectorData, sector, 1);
-      }
-
-      if (RES_OK == returnCode)
-      {
-         sectorInBuffer = sector;
-
-         memcpy((void*)globalData, (const void*)(&sectorData[(globalLBAOffset & 1) * 256]), 256);
-
-         WriteDataPort(STATUS_OK);
-         return;
-      }
-
-      driveInfo[globalCurDrive].attribs = 0xff;
-      returnCode |= STATUS_COMPLETE;
-   }
-
-   WriteDataPort(returnCode);
+	//debuglog("SDDOS_seek() %d [%08X]\n",fpos,fpos);
+		
+	return f_lseek(&driveInfo[globalCurDrive].fp,fpos);
 }
 
+void wfnReadSDDOSSect(void)
+{
+	BYTE 	returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
+	UINT	bytes_read;
+	
+	//debuglog("wfnReadSDDOSSect()\n");
+	
+	if (driveInfo[globalCurDrive].attribs != 0xff)
+	{
+		if(FR_OK==SDDOS_seek())
+		{
+			returnCode = f_read(&driveInfo[globalCurDrive].fp, globalData, SDOS_SECTOR_SIZE, &bytes_read);
+		}
 
+		if (RES_OK == returnCode)
+		{
+//			memcpy((void*)globalData, (const void*)(&sectorData[(globalLBAOffset & 1) * 256]), 256);
+
+			WriteDataPort(STATUS_OK);
+			return;
+		}
+
+		driveInfo[globalCurDrive].attribs = 0xff;
+		returnCode |= STATUS_COMPLETE;
+	}
+
+	WriteDataPort(returnCode);
+}
 
 
 void wfnWriteSDDOSSect(void)
 {
-   BYTE returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
+	BYTE returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
+	UINT bytes_written;
+	
+	//debuglog("wfnWriteSDDOSSect()\n");
 
-   if (driveInfo[globalCurDrive].attribs != 0xff)
-   {
-      DWORD sector;
+	if (driveInfo[globalCurDrive].attribs != 0xff)
+	{
+		if (driveInfo[globalCurDrive].attribs & 1)
+		{
+			// read-only
+			//
+			WriteDataPort(STATUS_COMPLETE | ERROR_READ_ONLY);
+			return;
+		}
 
-      if (driveInfo[globalCurDrive].attribs & 1)
-      {
-         // read-only
-         //
-         WriteDataPort(STATUS_COMPLETE | ERROR_READ_ONLY);
-         return;
-      }
+		if(FR_OK==SDDOS_seek())
+		{
+			returnCode = f_write(&driveInfo[globalCurDrive].fp, globalData, SDOS_SECTOR_SIZE, &bytes_written);
+		}
 
-      returnCode = RES_OK;
+		//debuglog("returnCode=%02X, written=%d [%04X]\n",returnCode,bytes_written,bytes_written);		
+		// invalidate the drive on error
+		if(FR_OK==returnCode)
+		{
+			WriteDataPort(STATUS_OK);
+			return;
+		}
 
-      sector = driveInfo[globalCurDrive].baseSector + globalLBAOffset / 2;
-      if (sector != sectorInBuffer)
-      {
-         // cache the physical sectors if necessary
-         //
-         returnCode = disk_read(0, sectorData, sector, 1);
-      }
+		driveInfo[globalCurDrive].attribs = 0xff;
+		WriteDataPort(STATUS_COMPLETE);
+	}
 
-      if (RES_OK == returnCode)
-      {
-         memcpy((void*)(&sectorData[(globalLBAOffset & 1) * 256]), (const void*)globalData, 256);
-
-         returnCode = disk_write(0, sectorData, sector, 1);
-      }
-
-      if (RES_OK == returnCode)
-      {
-         WriteDataPort(STATUS_OK);
-         return;
-      }
-
-      driveInfo[globalCurDrive].attribs = 0xff;
-      returnCode |= STATUS_COMPLETE;
-   }
-
-   WriteDataPort(returnCode);
+	WriteDataPort(returnCode);
 }
-
 
 void wfnValidateSDDOSDrives(void)
 {
    BYTE i;
    BYTE* ii = (BYTE*)driveInfo;
 
+//rpclog("wfnValidateSDDOSDrives()\n");
    // read the imgInfo structures back out of eeprom,
    // or 'BOOTDRV.CFG' if present (gets precidence)
 #if (PLATFORM==PLATFORM_PIC)
    strcpypgm2ram((char*)globalData, (const rom far char*)"BOOTDRV.CFG");
 #elif (PLATFORM==PLATFORM_AVR)
 	strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
+#elif (PLATFORM==PLATFORM_ATMU)
+	strcpy((char*)&globalData[0],"BOOTDRV.CFG");
 #endif
-
 
    // try to read the boot config file
    //
@@ -566,11 +511,13 @@ extern BYTE byteValueLatch;
 
 void wfnUnmountSDDOSImg(void)
 {
-   imgInfo* image = &driveInfo[byteValueLatch & 3];
-   memset(image, 0xff, sizeof(imgInfo));
+	imgInfo* image = &driveInfo[byteValueLatch & 3];
+	
+	f_close(&image->fp);
+	memset(image, 0xff, sizeof(imgInfo));
 
-   saveDrivesImpl();
-   WriteDataPort(STATUS_OK);
+	saveDrivesImpl();
+	WriteDataPort(STATUS_OK);
 }
 
 

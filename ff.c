@@ -197,7 +197,7 @@ int mem_cmp (const void* dst, const void* src, int cnt) {
 	return r;
 }
 
-#if (PLATFORM==PLATFORM_AVR)
+#if ((PLATFORM==PLATFORM_AVR) || (PLATFORM==PLATFORM_ATMU))
 #define rom
 #endif
 /* Check if chr is contained in the string */
