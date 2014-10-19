@@ -12,5 +12,5 @@ ${MCC}/bin/mcc18 -p=18F45$1 -I. -I${MCC}/h "wildcard.c"    -fo="intermediate/wil
 
 ${MCC}/bin/mplink -i -p18F45$1 -l. -l${MCC}/lib "intermediate/PicFirmware.o" "intermediate/ff.o" "intermediate/diskio.o" "intermediate/mmcio.o" "intermediate/mmc2_core.o" "intermediate/mmc2_wfn.o" "intermediate/wildcard.o" -u _CRUNTIME -u _EXTENDEDMODE -u __MPLAB_BUILD=1 -w -m "PICFirmware.map" -o"PICFirmware.cof"
 
-#%BIN%/hexdump-d PICFirmware.hex picFirmware-bin/atommc$1.bin $2
-#rem del PICFirmware.hex
+java -jar java/pichextobin/pichextobin.jar PICFirmware.hex atommc$1.bin
+
