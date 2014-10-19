@@ -6,3 +6,6 @@ PICFirmware.hex
 PICFirmware.lst
 PICFirmware.map
 intermediate/
+java/pichextobin/bin/
+java/pichextobin/build/
+java/pichextobin/pichextobin.jar
