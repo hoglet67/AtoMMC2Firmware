@@ -24,6 +24,7 @@
 #define CMD_FILE_OPEN_WRITE	0x13
 #define CMD_FILE_DELETE		0x14
 #define CMD_FILE_GETINFO	0x15
+#define CMD_FILE_SEEK		0x16
 
 #define CMD_INIT_READ		0x20
 #define CMD_INIT_WRITE		0x21
@@ -71,6 +72,10 @@
 #define ERROR_INVALID_DRIVE	0x09
 #define ERROR_READ_ONLY		0x0A
 #define ERROR_ALREADY_MOUNT	0x0A
+#define ERROR_TOO_MANY_OPEN	0x12
+
+// Offset returned file numbers by 0x20, to disambiguate from errors
+#define FILENUM_OFFSET		0x20
 
 // STATUS_REG bit masks
 //
