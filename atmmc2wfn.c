@@ -331,23 +331,22 @@ void wfnFileGetInfo(void)
    WriteDataPort(STATUS_OK);
 }
 
-
-
-
-void wfnFileRead(void)
-{
-   FIL *fil = &fildata[filenum];
-   UINT read;
-   if (globalAmount == 0)
-   {
-      globalAmount = 256;
-   }
-
-   WriteDataPort(STATUS_COMPLETE | f_read(fil, globalData, globalAmount, &read));
-}
-
-
-
+ void wfnFileRead(void)
+ {
+    int ret;
+    FIL *fil = &fildata[filenum];
+    UINT read;
+    if (globalAmount == 0)
+    {
+       globalAmount = 256;
+    }
+    ret = f_read(fil, globalData, globalAmount, &read);
+    if (filenum > 0 && fil->fptr == fil->fsize) {
+       WriteDataPort(STATUS_EOF);
+    } else {
+       WriteDataPort(STATUS_COMPLETE | ret);
+    }
+ }
 
 void wfnFileWrite(void)
 {
