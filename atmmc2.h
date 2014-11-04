@@ -50,9 +50,10 @@ typedef void (*WORKERFN)(void);
 
 #ifdef INCLUDE_SDDOS
 
+#define SDOS_SECTOR_SIZE	256
+
 typedef struct
 {
-   unsigned long baseSector;
    char filename[13];
    unsigned char attribs;
 }

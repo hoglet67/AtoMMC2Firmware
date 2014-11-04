@@ -34,14 +34,14 @@ char	WildPattern[WILD_LEN+1];
 
 #ifdef INCLUDE_SDDOS
 
-unsigned char *sectorData = &(fildata[3].buf);
-
-DWORD sectorInBuffer = 0xffffffff;
+int lastDriveNo = -1;
 
 imgInfo driveInfo[4];
 
 BYTE globalCurDrive;
 DWORD globalLBAOffset;
+
+BYTE SDDOS_seek();
 
 #endif
 
@@ -403,22 +403,36 @@ void wfnFileSeek(void)
 
 #ifdef INCLUDE_SDDOS
 
+int switchDrive(int driveNo) {
+   int res = 0;
+   if (driveNo != lastDriveNo) {
+      if (lastDriveNo >= 0) {
+         f_close(&fildata[0]);
+      }
+      lastDriveNo = -1;
+      if (driveNo >= 0) {
+         res = f_open(&fildata[0], (const XCHAR*)&driveInfo[driveNo].filename,(FA_READ | FA_WRITE));
+         if (!res) {
+            lastDriveNo = driveNo;
+         }
+      }
+   }
+   return res;
+}
 
-BYTE tryOpenImage(imgInfo* imginf)
+
+BYTE tryOpenImage(int driveNo)
 {
    FIL *fil = &fildata[0];
-   FILINFO *filinfo = &filinfodata[filenum];
+   FILINFO *filinfo = &filinfodata[0];
+   imgInfo* imginf = &driveInfo[driveNo];
    BYTE i;
 
-   res = f_open(fil, (const XCHAR*)&imginf->filename,FA_READ);
+   res = switchDrive(driveNo);
    if (FR_OK != res)
    {
       return STATUS_COMPLETE | res;
    }
-
-   // see pff clust2sec()
-   //
-   imginf->baseSector = (DWORD)(fil->org_clust-2) * fatfs.csize + fatfs.database;
 
    // disallow multiple mounts of the same image
    //
@@ -449,11 +463,13 @@ BYTE tryOpenImage(imgInfo* imginf)
 
 void saveDrivesImpl(void)
 {
-   FIL *fil = &fildata[0];
+   FIL *fil = &fildata[3];
 #if (PLATFORM==PLATFORM_PIC)
    strcpypgm2ram((char*)&globalData[0], (const rom far char*)"BOOTDRV.CFG");
 #elif (PLATFORM==PLATFORM_AVR)
 	strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
+#elif (PLATFORM==PLATFORM_ATMU)
+	strcpy((char*)&globalData[0],"BOOTDRV.CFG");
 #endif
    res = f_open(fil, (const XCHAR*)globalData, FA_OPEN_ALWAYS|FA_WRITE);
    if (FR_OK == res)
@@ -470,16 +486,15 @@ void wfnOpenSDDOSImg(void)
    // globalData[0] = drive number 0..3
    // globalData[1]... image filename
 
-   BYTE stat, error;
+   BYTE error;
    BYTE id = globalData[0] & 3;
 
    imgInfo* image = &driveInfo[id];
-   stat = image->attribs;
 
    memset(image, 0, sizeof(imgInfo));
    strncpy((char*)&image->filename, (const char*)&globalData[1], 13);
 
-   error = tryOpenImage(image);
+   error = tryOpenImage(id);
    if (error >= STATUS_COMPLETE)
    {
       // fatal error range
@@ -496,31 +511,27 @@ void wfnOpenSDDOSImg(void)
 }
 
 
+BYTE SDDOS_seek()
+{
+   DWORD fpos = globalLBAOffset * SDOS_SECTOR_SIZE;
+   return f_lseek(&fildata[0], fpos);
+}
+
 void wfnReadSDDOSSect(void)
 {
    BYTE returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
+   UINT bytes_read;
 
    if (driveInfo[globalCurDrive].attribs != 0xff)
    {
-      // each physical device sector holds 2 sddos sectors
-      //
-      DWORD sector = driveInfo[globalCurDrive].baseSector + globalLBAOffset / 2;
-
-      returnCode = RES_OK;
-
-      if (sector != sectorInBuffer)
+      switchDrive(globalCurDrive);
+      if(FR_OK==SDDOS_seek())
       {
-         // cache the physical sectors
-         //
-         returnCode = disk_read(0, sectorData, sector, 1);
+         returnCode = f_read(&fildata[0], globalData, SDOS_SECTOR_SIZE, &bytes_read);
       }
 
       if (RES_OK == returnCode)
       {
-         sectorInBuffer = sector;
-
-         memcpy((void*)globalData, (const void*)(&sectorData[(globalLBAOffset & 1) * 256]), 256);
-
          WriteDataPort(STATUS_OK);
          return;
       }
@@ -533,16 +544,13 @@ void wfnReadSDDOSSect(void)
 }
 
 
-
-
 void wfnWriteSDDOSSect(void)
 {
    BYTE returnCode = STATUS_COMPLETE | ERROR_INVALID_DRIVE;
-
+   UINT bytes_written;
+   
    if (driveInfo[globalCurDrive].attribs != 0xff)
    {
-      DWORD sector;
-
       if (driveInfo[globalCurDrive].attribs & 1)
       {
          // read-only
@@ -550,37 +558,32 @@ void wfnWriteSDDOSSect(void)
          WriteDataPort(STATUS_COMPLETE | ERROR_READ_ONLY);
          return;
       }
+      
+      switchDrive(globalCurDrive);
 
-      returnCode = RES_OK;
-
-      sector = driveInfo[globalCurDrive].baseSector + globalLBAOffset / 2;
-      if (sector != sectorInBuffer)
+      if(FR_OK==SDDOS_seek())
       {
-         // cache the physical sectors if necessary
-         //
-         returnCode = disk_read(0, sectorData, sector, 1);
+         returnCode = f_write(&fildata[0], globalData, SDOS_SECTOR_SIZE, &bytes_written);
       }
 
-      if (RES_OK == returnCode)
+      if(FR_OK==returnCode)
       {
-         memcpy((void*)(&sectorData[(globalLBAOffset & 1) * 256]), (const void*)globalData, 256);
-
-         returnCode = disk_write(0, sectorData, sector, 1);
+         returnCode = f_sync(&fildata[0]);
       }
 
-      if (RES_OK == returnCode)
+      // invalidate the drive on error
+      if(FR_OK==returnCode)
       {
          WriteDataPort(STATUS_OK);
          return;
       }
 
       driveInfo[globalCurDrive].attribs = 0xff;
-      returnCode |= STATUS_COMPLETE;
+      WriteDataPort(STATUS_COMPLETE);
    }
 
    WriteDataPort(returnCode);
 }
-
 
 void wfnValidateSDDOSDrives(void)
 {
@@ -593,7 +596,7 @@ void wfnValidateSDDOSDrives(void)
 #if (PLATFORM==PLATFORM_PIC)
    strcpypgm2ram((char*)globalData, (const rom far char*)"BOOTDRV.CFG");
 #elif (PLATFORM==PLATFORM_AVR)
-	strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
+   strcpy_P((char*)&globalData[0],PSTR("BOOTDRV.CFG"));
 #endif
 
 
@@ -604,6 +607,7 @@ void wfnValidateSDDOSDrives(void)
    {
       UINT temp;
       res = f_read(fil, (void*)(&ii[0]), 4 * sizeof(imgInfo), &temp);
+      f_close(fil);
    }
    else
    {
@@ -612,7 +616,7 @@ void wfnValidateSDDOSDrives(void)
 
    for (i = 0; i < 4; ++i)
    {
-      if (driveInfo[i].attribs == 0xff || (tryOpenImage(&driveInfo[i]) & 0x40))
+      if (driveInfo[i].attribs == 0xff || (tryOpenImage(i) & 0x40))
       {
          memset(&driveInfo[i], 0xff, sizeof(imgInfo));
       }
@@ -637,7 +641,11 @@ extern BYTE byteValueLatch;
 
 void wfnUnmountSDDOSImg(void)
 {
-   imgInfo* image = &driveInfo[byteValueLatch & 3];
+   int driveNo = byteValueLatch & 3; 
+   imgInfo* image = &driveInfo[driveNo];
+   switchDrive(driveNo);
+   f_close(&fildata[driveNo]);
+   lastDriveNo = -1;
    memset(image, 0xff, sizeof(imgInfo));
 
    saveDrivesImpl();
