@@ -63,6 +63,7 @@
 // Status codes
 #define STATUS_OK			0x3F
 #define STATUS_COMPLETE		0x40
+#define STATUS_EOF		0x60
 #define	STATUS_BUSY			0x80
 
 #define ERROR_MASK			0x3F
