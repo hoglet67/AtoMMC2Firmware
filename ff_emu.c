@@ -356,7 +356,7 @@ FRESULT f_lseek (
 )
 {
 	lseek((int)fp->fs,ofs,SEEK_SET);
-	
+	update_FIL(fp,0,0);	
 	return FR_OK;
 }
 
