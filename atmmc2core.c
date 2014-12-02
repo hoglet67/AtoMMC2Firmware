@@ -146,6 +146,12 @@ void at_process(void)
                //
                worker = WFN_FileOpenWrite;
             }
+            else if (received == CMD_FILE_OPEN_RAF)
+            {
+               // open the file with name in global data buffer for write/append
+               //
+               worker = WFN_FileOpenRAF;
+            }
             else if (received == CMD_FILE_DELETE)
             {
                // delete the file with name in global data buffer
