@@ -295,7 +295,7 @@ void wfnFileOpenWrite(void)
 
 void wfnFileOpenRAF(void)
 {
-   WriteDataPort(STATUS_COMPLETE | fileOpen(FA_CREATE_ALWAYS|FA_WRITE));
+   WriteDataPort(STATUS_COMPLETE | fileOpen(FA_OPEN_ALWAYS|FA_WRITE));
 }
 
 
