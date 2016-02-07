@@ -8,8 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.HashSet;
-import java.util.Set;
 
 public class Convert {
 	
@@ -17,8 +15,12 @@ public class Convert {
 	}
 
 
-	private void convertToAtm(File srcFile, File dstFile) throws IOException {
+    private void convertToAtm(File srcFile, File dstFile, boolean bootloader) throws IOException {
 
+    	
+    	int excludeLo = bootloader ? 0x0000 : 0x1000; 
+    	int excludeHi = bootloader ? 0x1000 : 0xC000; 
+		int extendedAddress = 0;
 		
 		byte[] memory = new byte[0x10000];
 		for (int i = 0; i < memory.length; i++) {
@@ -54,32 +56,51 @@ public class Convert {
 				int address = Integer.parseInt(line.substring(3, 7), 16);
 
 				int record = Integer.parseInt(line.substring(7, 9), 16);
-				if (record != 0) {
-					System.out.println("Skipping record " + record + " at line " + linenum);
-					continue;
-				}
 				
-				int checksum = Integer.parseInt(line.substring(9 + len * 2, 11 + len * 2), 16);
-				
-				for (int i = 0; i < len; i++) {
-					int data = Integer.parseInt(line.substring(9 + 2 * i, 11 + 2 * i), 16);
-					total += data;
-					memory[address + i] = (byte) data;
-					if (address + i > last) {
-						last = address + i;
+				if (record == 0) {
+					int checksum = Integer.parseInt(line.substring(9 + len * 2, 11 + len * 2), 16);
+					
+					for (int i = 0; i < len; i++) {
+						int data = Integer.parseInt(line.substring(9 + 2 * i, 11 + 2 * i), 16);
+						total += data;
+						int addr = extendedAddress + address + i;
+						if (addr >= excludeLo && addr < excludeHi) {
+							memory[addr] = (byte) data;
+							if (addr > last) {
+								last = addr;
+							}
+						} else {
+							System.out.println("Skipping out of range addess: " + Integer.toHexString(addr) + " = " + Integer.toHexString(data));
+						}
 					}
+					
+					total += len;
+					total += address;
+					total += address >> 8;
+					total += record;
+					total += checksum;
+					
+					total &= 255;
+					if (total != 0) {
+						throw new RuntimeException("Incorrect checksum at line " + linenum);					
+					}
+					
+				} else if (record == 4) {
+
+					extendedAddress = 0;
+
+					for (int i = 0; i < len; i++) {
+						extendedAddress *= 256;
+						extendedAddress += Integer.parseInt(line.substring(9 + 2 * i, 11 + 2 * i), 16);
+					}
+					extendedAddress <<= 16;
+
+					System.out.println("Record 4; line: " + line + "; extended address = " + Integer.toHexString(extendedAddress));
+
+				} else { 
+					System.out.println("Skipping record " + record + " at line " + linenum);
 				}
-				
-				total += len;
-				total += address;
-				total += address >> 8;
-				total += record;
-				total += checksum;
-				
-				total &= 255;
-				if (total != 0) {
-					throw new RuntimeException("Incorrect checksum at line " + linenum);					
-				}
+
 				
 				linenum++;
 			}
@@ -101,6 +122,14 @@ public class Convert {
 
 		// Output the data with out a checksum
 		
+		if (bootloader) {
+
+		FileOutputStream fos = new FileOutputStream(dstFile);
+		fos.write(memory, 0, 0x1000);
+		fos.close();
+
+		} else {
+
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		
 		bos.write('S');
@@ -118,17 +147,18 @@ public class Convert {
 		bos.close();		
 		
 		byte[] binary = bos.toByteArray();
-		
+
 		// Calculate the CRC
 		int crc = crc(binary, 512, 8192 + 512);
-
-				
-		binary[4] = (byte) (crc & 255);
+	        binary[4] = (byte) (crc & 255);
 		binary[5] = (byte) ((crc >> 8) & 255);
+
 		
 		FileOutputStream fos = new FileOutputStream(dstFile);
 		fos.write(binary);
 		fos.close();
+
+		}
 	}
 	
 	private int crc(byte[] bytes, int start, int end) {
@@ -152,8 +182,8 @@ public class Convert {
 
 	public static final void main(String[] args) {
 		try {
-			if (args.length != 2) {
-				System.err.println("usage: java -jar pichextobin.jar <PIC Hex File File> <PIC Bin File>");
+			if (args.length < 2 || args.length > 3) {
+				System.err.println("usage: java -jar pichextobin.jar <PIC Hex File File> <PIC Bin File> [ bootloader ]");
 				System.exit(1);
 			}
 			File srcFile = new File(args[0]);
@@ -169,7 +199,13 @@ public class Convert {
 			
 
 			Convert c = new Convert();
-			c.convertToAtm(srcFile, dstFile);
+			boolean bootloader = args.length == 3;
+			if (bootloader) {
+			    System.out.println("Bootloader mode");
+			} else {
+			    System.out.println("Firmware mode");
+			}
+			c.convertToAtm(srcFile, dstFile, bootloader);
 
 		} catch (IOException e) {
 			e.printStackTrace();
