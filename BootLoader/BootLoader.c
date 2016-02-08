@@ -76,7 +76,7 @@ void interrupt (void)
     GOTO 0x1008
 
     // false instruction to double as bootloader version C0-01 F0-01
-    MOVFF 0x02,0x02  // 0201
+    MOVFF 0x02,0x09  // 0201
     _endasm
 }
 #pragma code
@@ -581,6 +581,12 @@ void main(void)
 
     TRISA = 0b11011111;
 
+	// enable pullups on port B
+	INTCON2bits.RBPU=0;
+
+	// Make Port B an input. 
+	TRISB = 0xFF;
+
     // lights out
     REDLEDOFF();
     GREENLEDOFF();
@@ -603,7 +609,9 @@ void main(void)
     // and the bootloader flag is clear. This would be bad. It is extremely unlikely however
     // as long as any bootloader-updater ensures the eeprom is correctly configured (reset)...
 
-    if (configFlags & 0x80)
+	// if high bit of port b is 0, then enter the bootloader, this is a hardware way of forcing 
+	// the bootload, even if the config register bit is cleared. 
+    if ((configFlags & 0x80) || ((PORTB & 0x80)==0))
     {
         CardType = disk_initialise();
 

@@ -9,7 +9,7 @@ dir_bin=
 dir_tmp=.\intermediate
 dir_sin=
 dir_inc=C:\Program Files (x86)\MCC18\h
-dir_lib=C:\Program Files\MCC18\lib;C:\Program Files (x86)\MCC18\lib
+dir_lib=d:\mcc18\lib
 dir_lkr=.
 [CAT_FILTERS]
 filter_src=*.asm;*.c
