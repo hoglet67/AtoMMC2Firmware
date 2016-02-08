@@ -10,12 +10,12 @@ LIBPATH .
 
 #IFDEF _CRUNTIME
   #IFDEF _EXTENDEDMODE
-    FILES c018i_e.o
+    FILES c018iz_e.o
     FILES clib_e.lib
     FILES p18f4520_e.lib
 
   #ELSE
-    FILES c018i.o
+    FILES c018iz.o
     FILES clib.lib
     FILES p18f4520.lib
   #FI

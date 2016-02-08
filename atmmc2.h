@@ -9,7 +9,7 @@
 #endif
 
 #define VSN_MAJ 2
-#define VSN_MIN 10
+#define VSN_MIN 11
 
 #define SECBUFFSIZE 512
 #define GLOBUFFSIZE 256
