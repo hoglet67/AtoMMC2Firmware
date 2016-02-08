@@ -76,7 +76,7 @@ void interrupt (void)
     GOTO 0x1008
 
     // false instruction to double as bootloader version C0-01 F0-01
-    MOVFF 0x02,0x01  // 0201
+    MOVFF 0x02,0x02  // 0201
     _endasm
 }
 #pragma code
