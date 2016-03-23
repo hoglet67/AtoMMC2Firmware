@@ -16,6 +16,9 @@
 #define CMD_DIR_OPEN		0x00
 #define CMD_DIR_READ		0x01
 #define CMD_DIR_CWD			0x02
+#define CMD_DIR_GETCWD		0x03
+#define CMD_DIR_MKDIR		0x04
+#define CMD_DIR_RMDIR		0x05
 
 // CMD_REG_COMMANDS
 #define CMD_FILE_CLOSE		0x10

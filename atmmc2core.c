@@ -116,6 +116,18 @@ void at_process(void)
                //
                worker = WFN_SetCWDirectory;
             }
+            else if (received == CMD_DIR_MKDIR)
+            {
+               // create directory
+               //
+               worker = WFN_DirectoryCreate;
+            }
+            else if (received == CMD_DIR_RMDIR)
+            {
+               // delete directory
+               //
+               worker = WFN_DirectoryDelete;
+            }
 			
 			// File group.
 			//

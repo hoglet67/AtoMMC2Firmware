@@ -238,15 +238,20 @@ void wfnDirectoryRead(void)
 #endif
 }
 
-
-
 void wfnSetCWDirectory(void)
 {
    WriteDataPort(STATUS_COMPLETE | f_chdir((const XCHAR*)globalData));
 }
 
+void wfnDirectoryCreate(void)
+{
+   WriteDataPort(STATUS_COMPLETE | f_mkdir((const XCHAR*)globalData));
+}
 
-
+void wfnDirectoryDelete(void)
+{
+   WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)globalData));
+}
 
 static BYTE fileOpen(BYTE mode)
 {

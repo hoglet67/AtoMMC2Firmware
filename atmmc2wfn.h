@@ -4,6 +4,8 @@
 WFUNC(DirectoryOpen)
 WFUNC(DirectoryRead)
 WFUNC(SetCWDirectory)
+WFUNC(DirectoryCreate)
+WFUNC(DirectoryDelete)
 WFUNC(FileOpenRead)
 WFUNC(FileOpenWrite)
 WFUNC(FileOpenRAF)
