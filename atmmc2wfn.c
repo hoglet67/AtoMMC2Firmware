@@ -422,11 +422,11 @@ int switchDrive(int driveNo) {
    int res = 0;
    if (driveNo != lastDriveNo) {
       if (lastDriveNo >= 0) {
-         f_close(&fildata[0]);
+         f_close(&fildata[3]);
       }
       lastDriveNo = -1;
       if (driveNo >= 0) {
-         res = f_open(&fildata[0], (const XCHAR*)&driveInfo[driveNo].filename,(FA_READ | FA_WRITE));
+         res = f_open(&fildata[3], (const XCHAR*)&driveInfo[driveNo].filename,(FA_READ | FA_WRITE));
          if (!res) {
             lastDriveNo = driveNo;
          }
@@ -438,8 +438,8 @@ int switchDrive(int driveNo) {
 
 BYTE tryOpenImage(int driveNo)
 {
-   FIL *fil = &fildata[0];
-   FILINFO *filinfo = &filinfodata[0];
+   FIL *fil = &fildata[3];
+   FILINFO *filinfo = &filinfodata[3];
    imgInfo* imginf = &driveInfo[driveNo];
    BYTE i;
 
@@ -529,7 +529,7 @@ void wfnOpenSDDOSImg(void)
 BYTE SDDOS_seek()
 {
    DWORD fpos = globalLBAOffset * SDOS_SECTOR_SIZE;
-   return f_lseek(&fildata[0], fpos);
+   return f_lseek(&fildata[3], fpos);
 }
 
 void wfnReadSDDOSSect(void)
@@ -542,7 +542,7 @@ void wfnReadSDDOSSect(void)
       switchDrive(globalCurDrive);
       if(FR_OK==SDDOS_seek())
       {
-         returnCode = f_read(&fildata[0], globalData, SDOS_SECTOR_SIZE, &bytes_read);
+         returnCode = f_read(&fildata[3], globalData, SDOS_SECTOR_SIZE, &bytes_read);
       }
 
       if (RES_OK == returnCode)
@@ -578,12 +578,12 @@ void wfnWriteSDDOSSect(void)
 
       if(FR_OK==SDDOS_seek())
       {
-         returnCode = f_write(&fildata[0], globalData, SDOS_SECTOR_SIZE, &bytes_written);
+         returnCode = f_write(&fildata[3], globalData, SDOS_SECTOR_SIZE, &bytes_written);
       }
 
       if(FR_OK==returnCode)
       {
-         returnCode = f_sync(&fildata[0]);
+         returnCode = f_sync(&fildata[3]);
       }
 
       // invalidate the drive on error
@@ -602,7 +602,7 @@ void wfnWriteSDDOSSect(void)
 
 void wfnValidateSDDOSDrives(void)
 {
-   FIL *fil = &fildata[0];
+   FIL *fil = &fildata[3];
    BYTE i;
    BYTE* ii = (BYTE*)driveInfo;
 
