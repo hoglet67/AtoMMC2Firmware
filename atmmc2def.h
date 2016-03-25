@@ -20,6 +20,8 @@
 #define CMD_DIR_MKDIR		0x04
 #define CMD_DIR_RMDIR		0x05
 
+#define CMD_RENAME			0x08
+
 // CMD_REG_COMMANDS
 #define CMD_FILE_CLOSE		0x10
 #define CMD_FILE_OPEN_READ	0x11

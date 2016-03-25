@@ -128,6 +128,12 @@ void at_process(void)
                //
                worker = WFN_DirectoryDelete;
             }
+            else if (received == CMD_RENAME)
+            {
+               // delete directory
+               //
+               worker = WFN_Rename;
+            }
 			
 			// File group.
 			//

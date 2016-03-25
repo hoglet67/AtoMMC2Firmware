@@ -2638,8 +2638,7 @@ FRESULT f_utime (
 
 	LEAVE_FF(dj.fs, res);
 }
-
-
+#endif
 
 
 /*-----------------------------------------------------------------------*/
@@ -2705,7 +2704,6 @@ FRESULT f_rename (
 
 	LEAVE_FF(dj_old.fs, res);
 }
-#endif
 
 #endif /* !_FS_READONLY */
 #endif /* _FS_MINIMIZE == 0 */
