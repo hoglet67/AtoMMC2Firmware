@@ -90,7 +90,9 @@ void at_process(void)
 	      filenum = (received >> 2) & 3;
 	      received &= 0xF3;
 	    }
+#if (PLATFORM!=PLATFORM_AVR)
             WriteDataPort(STATUS_BUSY);
+#endif
 			//log0("%02X\n",LatchedData);
 			
 			// Directory group, moved here 2011-05-29 PHS.

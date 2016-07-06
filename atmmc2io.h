@@ -3,6 +3,11 @@
 // Mask applied to register address bits.
 #define ADDRESS_MASK	0x07
 
+#define DEBUG_RESULT	0
+#define DEBUG_CMD       0
+#define DEBUG_GLOBAL    0
+#define DEBUG_MMC       0
+
 #if (PLATFORM==PLATFORM_PIC)
 
 #define LEDPINSOUT() TRISCbits.TRISC0 = 0; TRISCbits.TRISC1 = 0;
@@ -23,18 +28,30 @@
 #define ReadDataPort()
 #define WriteDataPort(value)	{ LATD=value; }	
 
+#define IODDR TRISB
+#define IOPORT_R PORTB
+#define IOPORT_W LATB
+
 extern void redSignal(unsigned char);
 
 #elif (PLATFORM==PLATFORM_AVR)
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
-#define LEDPINSOUT()
 
-#define REDLEDON()
-#define REDLEDOFF()
-#define GREENLEDON()
-#define GREENLEDOFF()
+#define LEDPORT PORTB
+#define LEDDDR  DDRB
+#define GLED    6
+#define RLED    7
+#define GLED_MASK (1 << GLED)
+#define RLED_MASK (1 << RLED)
+
+#define LEDPINSOUT() { LEDDDR |= (GLED_MASK | RLED_MASK); };
+
+#define REDLEDON() { LEDPORT &= ~RLED_MASK; };
+#define REDLEDOFF()  { LEDPORT |= RLED_MASK; };
+#define GREENLEDON()  { LEDPORT &= ~GLED_MASK; };
+#define GREENLEDOFF()  { LEDPORT |= GLED_MASK; };
 
 #define ASSERTIRQ()
 #define RELEASEIRQ()
@@ -44,9 +61,9 @@ extern void redSignal(unsigned char);
 #define NOPDelay()		{ asm("nop"); }
 
 /* Dataport for communication with host processor */
-#define DATAPORT	PORTC
-#define DATAPIN		PINC
-#define	DATADDR		DDRC
+#define DATAPORT	PORTA
+#define DATAPIN		PINA
+#define	DATADDR		DDRA
 
 #define SetIOWrite()	{ DATADDR=0xFF; };
 #define SetIORead() 	{ DATADDR=0x00; };
@@ -81,15 +98,20 @@ extern void redSignal(unsigned char);
 #define AtomRWLine		4
 #define AtomRWMask		(1 << AtomRWLine)
 
-#define LatchAddressIn()			{ SelectAddr(); SetIORead(); AssertOE(); LatchedAddressLast=DATAPIN; ClearOE(); }
-#define ReadDataPort()				{ SelectData(); SetIORead(); AssertOE(); LatchedData=DATAPIN; ClearOE(); }
+#define LatchAddressIn()			{ SelectAddr(); SetIORead(); AssertOE(); NOPDelay(); LatchedAddressLast=DATAPIN; ClearOE(); }
+#define ReadDataPort()				{ SelectData(); SetIORead(); AssertOE(); NOPDelay(); LatchedData=DATAPIN; ClearOE(); }
 #define WriteDataPort(value)		{ SelectData(); SetIOWrite(); DATAPORT=value; AssertLE(); ClearLE(); }	
+
 #define AddressPORT	
 
 #define WASWRITE		((LatchedAddressLast & AtomRWMask)==0) 
 
 #define ReadEEPROM(addr)		eeprom_read_byte ((const uint8_t *)(addr))	
 #define WriteEEPROM(addr, val)	eeprom_write_byte ((uint8_t *)(addr), (uint8_t)(val))
+
+#define IODDR DDRE
+#define IOPORT_R PINE
+#define IOPORT_W PORTE
 
 #elif (PLATFORM==PLATFORM_EMU)
 
@@ -112,6 +134,8 @@ extern void redSignal(unsigned char);
 #define redSignal(x)
 
 #endif
+
+#define WriteResult(value) 	{ int v = value; if (DEBUG_RESULT) log0("res=%02X\n",v); WriteDataPort(v); }
 
 #define _IO
 #endif

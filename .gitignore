@@ -5,6 +5,10 @@
 *.hex
 *.lst
 *.map
+*.o
+*.zip
+*.bin
+avr_progmem*
 intermediate/
 bootloader-bin/
 BootUpdater-bin/
