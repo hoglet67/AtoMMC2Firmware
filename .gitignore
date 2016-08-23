@@ -5,9 +5,11 @@
 *.hex
 *.lst
 *.map
+*.err
 intermediate/
 bootloader-bin/
 BootUpdater-bin/
+picfirmware-bin/
 java/pichextobin/bin/
 java/pichextobin/build/
 java/pichextobin/pichextobin.jar

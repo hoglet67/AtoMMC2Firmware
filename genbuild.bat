@@ -1,6 +1,5 @@
-@attrib -r buildnumber.txt
-@attrib -r buildnumber.h
-@gawk -F"," "/movff/{$NF+=1;}1" OFS=","  buildnumber.txt >buildnumber.h
-@copy buildnumber.h buildnumber.txt
-@attrib +r buildnumber.txt
-@attrib +r buildnumber.h
+@echo off
+for /f "tokens=1" %%i in (buildnumber.txt) do set vsn=%%i
+set /A VSN=VSN+1
+echo %VSN% > buildnumber.txt
+echo #define BUILDNUMBER movff 0,%VSN% > buildnumber.h
