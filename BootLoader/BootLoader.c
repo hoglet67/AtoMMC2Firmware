@@ -68,6 +68,8 @@ typedef enum {
 #define FS_FAT16  2
 #define FS_FAT32  3
 
+#define BLVERSION_MAJOR 2
+#define BLVERSION_MINOR 9
 
 #pragma code low_vector=0x0008
 void interrupt (void)
@@ -75,8 +77,8 @@ void interrupt (void)
     _asm
     GOTO 0x1008
 
-    // false instruction to double as bootloader version C0-01 F0-01
-    MOVFF 0x02,0x09  // 0201
+    // false instruction to double as bootloader version 'PEEKed'' by the main code
+    MOVFF BLVERSION_MAJOR,BLVERSION_MINOR
     _endasm
 }
 #pragma code
@@ -262,7 +264,7 @@ BYTE disk_initialise(void)
    SPI_SCK_PIN = 0;
 
     /* send dummy clocks */
-    /* at least 80 - enough to fluch through any unfinished cmd sequence */
+    /* at least 80 - enough to flush through any unfinished cmd sequence */
    for (n = 0; n < 10; ++n)
    {
         SinkXFER();
