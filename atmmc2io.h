@@ -23,7 +23,7 @@
 #define ReadDataPort()
 #define WriteDataPort(value)	{ LATD=value; }	
 
-extern void redSignal(unsigned char);
+extern void redSignal(char);
 
 #elif (PLATFORM==PLATFORM_AVR)
 #include <avr/io.h>

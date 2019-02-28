@@ -19,11 +19,11 @@
 
 
 #pragma udata windowbuf
-char windowData[512];
+unsigned char windowData[512];
 #pragma udata
 
 #pragma udata globalbuf
-char globalData[256];
+unsigned char globalData[256];
 #pragma udata
 
 BYTE configByte;
