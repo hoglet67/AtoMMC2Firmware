@@ -3,7 +3,9 @@
 // Mask applied to register address bits.
 #define ADDRESS_MASK	0x07
 
-#define DEBUG_RESULT	0
+#include "status.h"
+
+#define DEBUG_RESULT    0
 #define DEBUG_CMD       0
 #define DEBUG_GLOBAL    0
 #define DEBUG_MMC       0
