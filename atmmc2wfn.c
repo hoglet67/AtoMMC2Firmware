@@ -135,11 +135,11 @@ void wfnDirectoryOpen(void)
 	res = f_opendir(&dir, (const char*)globalData);
    if (FR_OK != res)
    {
-      WriteDataPort(STATUS_COMPLETE | res);
+      WriteResult(STATUS_COMPLETE | res);
       return;
    }
 
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 
@@ -159,7 +159,7 @@ void wfnDirectoryRead(void)
 		if (res != FR_OK || !filinfo->fname[0])
 		{
 			// done
-			WriteDataPort(STATUS_COMPLETE | res);
+			WriteResult(STATUS_COMPLETE | res);
 			return;
 		}
 
@@ -191,7 +191,7 @@ void wfnDirectoryRead(void)
 			globalData[len+1] = filinfo->fattrib;
 			memcpy(&globalData[len+2], (void*)&(filinfo->fsize), sizeof(DWORD));
 
-			WriteDataPort(STATUS_OK);
+			WriteResult(STATUS_OK);
 			return;
 		}
 	}
@@ -205,7 +205,7 @@ void wfnDirectoryRead(void)
       if (res != FR_OK || !filinfo->fname[0])
       {
          // done
-         WriteDataPort(STATUS_COMPLETE | res);
+         WriteResult(STATUS_COMPLETE | res);
          return;
       }
 
@@ -233,7 +233,7 @@ void wfnDirectoryRead(void)
       globalData[len+1] = filinfo->fattrib;
       memcpy(&globalData[len+2], (void*)(&filinfo->fsize), sizeof(DWORD));
 
-      WriteDataPort(STATUS_OK);
+      WriteResult(STATUS_OK);
       return;
    }
 #endif
@@ -241,24 +241,24 @@ void wfnDirectoryRead(void)
 
 void wfnSetCWDirectory(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_chdir((const XCHAR*)globalData));
+   WriteResult(STATUS_COMPLETE | f_chdir((const XCHAR*)globalData));
 }
 
 void wfnDirectoryCreate(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_mkdir((const XCHAR*)globalData));
+   WriteResult(STATUS_COMPLETE | f_mkdir((const XCHAR*)globalData));
 }
 
 void wfnDirectoryDelete(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)globalData));
+   WriteResult(STATUS_COMPLETE | f_unlink((const XCHAR*)globalData));
 }
 
 void wfnRename(void)
 {
    const XCHAR* from = (const XCHAR*)globalData;
    const XCHAR*   to = (const XCHAR*)(globalData + strlen((const char*)globalData) + 1);
-   WriteDataPort(STATUS_COMPLETE | f_rename(from, to));
+   WriteResult(STATUS_COMPLETE | f_rename(from, to));
 }
 
 static BYTE fileOpen(BYTE mode)
@@ -298,17 +298,17 @@ void wfnFileOpenRead(void)
      FILINFO *filinfo = &filinfodata[filenum];
      get_fileinfo_special(filinfo);
    }
-   WriteDataPort(STATUS_COMPLETE | res);
+   WriteResult(STATUS_COMPLETE | res);
 }
 
 void wfnFileOpenWrite(void)
 {
-   WriteDataPort(STATUS_COMPLETE | fileOpen(FA_CREATE_NEW|FA_WRITE));
+   WriteResult(STATUS_COMPLETE | fileOpen(FA_CREATE_NEW|FA_WRITE));
 }
 
 void wfnFileOpenRAF(void)
 {
-   WriteDataPort(STATUS_COMPLETE | fileOpen(FA_OPEN_ALWAYS|FA_WRITE));
+   WriteResult(STATUS_COMPLETE | fileOpen(FA_OPEN_ALWAYS|FA_WRITE));
 }
 
 
@@ -345,7 +345,7 @@ void wfnFileGetInfo(void)
 
    globalData[12] = filinfo->fattrib & 0x3f;
 
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 void wfnFileRead(void)
@@ -359,9 +359,9 @@ void wfnFileRead(void)
    }
    ret = f_read(fil, globalData, globalAmount, &read);
    if (filenum > 0 && ret == 0 &&  globalAmount != read) {
-      WriteDataPort(STATUS_EOF);
+      WriteResult(STATUS_EOF);
    } else {
-      WriteDataPort(STATUS_COMPLETE | ret);
+      WriteResult(STATUS_COMPLETE | ret);
    }
 }
 
@@ -374,7 +374,7 @@ void wfnFileWrite(void)
       globalAmount = 256;
    }
 
-   WriteDataPort(STATUS_COMPLETE | f_write(fil, (void*)globalData, globalAmount, &written));
+   WriteResult(STATUS_COMPLETE | f_write(fil, (void*)globalData, globalAmount, &written));
 }
 
 
@@ -383,7 +383,7 @@ void wfnFileWrite(void)
 void wfnFileClose(void)
 {
    FIL *fil = &fildata[filenum];
-   WriteDataPort(STATUS_COMPLETE | f_close(fil));
+   WriteResult(STATUS_COMPLETE | f_close(fil));
 }
 
 
@@ -393,7 +393,7 @@ void wfnFileClose(void)
 
 void wfnFileDelete(void)
 {
-   WriteDataPort(STATUS_COMPLETE | f_unlink((const XCHAR*)&globalData[0]));
+   WriteResult(STATUS_COMPLETE | f_unlink((const XCHAR*)&globalData[0]));
 }
 
 void wfnFileSeek(void)
@@ -412,7 +412,7 @@ void wfnFileSeek(void)
    dwb.byte[2] = globalData[2]; 
    dwb.byte[3] = globalData[3]; 
 
-   WriteDataPort(STATUS_COMPLETE | f_lseek(fil, dwb.dword));
+   WriteResult(STATUS_COMPLETE | f_lseek(fil, dwb.dword));
 }
 
 
@@ -523,7 +523,7 @@ void wfnOpenSDDOSImg(void)
    //
    saveDrivesImpl();
 
-   WriteDataPort(error);
+   WriteResult(error);
 }
 
 
@@ -548,7 +548,7 @@ void wfnReadSDDOSSect(void)
 
       if (RES_OK == returnCode)
       {
-         WriteDataPort(STATUS_OK);
+         WriteResult(STATUS_OK);
          return;
       }
 
@@ -556,7 +556,7 @@ void wfnReadSDDOSSect(void)
       returnCode |= STATUS_COMPLETE;
    }
 
-   WriteDataPort(returnCode);
+   WriteResult(returnCode);
 }
 
 
@@ -571,7 +571,7 @@ void wfnWriteSDDOSSect(void)
       {
          // read-only
          //
-         WriteDataPort(STATUS_COMPLETE | ERROR_READ_ONLY);
+         WriteResult(STATUS_COMPLETE | ERROR_READ_ONLY);
          return;
       }
       
@@ -590,15 +590,15 @@ void wfnWriteSDDOSSect(void)
       // invalidate the drive on error
       if(FR_OK==returnCode)
       {
-         WriteDataPort(STATUS_OK);
+         WriteResult(STATUS_OK);
          return;
       }
 
       driveInfo[globalCurDrive].attribs = 0xff;
-      WriteDataPort(STATUS_COMPLETE);
+      WriteResult(STATUS_COMPLETE);
    }
 
-   WriteDataPort(returnCode);
+   WriteResult(returnCode);
 }
 
 void wfnValidateSDDOSDrives(void)
@@ -640,14 +640,14 @@ void wfnValidateSDDOSDrives(void)
 
    saveDrivesImpl();
 
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 
 void wfnSerialiseSDDOSDrives(void)
 {
    saveDrivesImpl();
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 
@@ -665,7 +665,7 @@ void wfnUnmountSDDOSImg(void)
    memset(image, 0xff, sizeof(imgInfo));
 
    saveDrivesImpl();
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 
@@ -690,7 +690,7 @@ void wfnGetSDDOSImgNames(void)
       ++n;
    }
 
-   WriteDataPort(STATUS_OK);
+   WriteResult(STATUS_OK);
 }
 
 
@@ -711,7 +711,7 @@ void wfnExecuteArbitrary(void)
 {
    if (globalAmount == 0 && globalDataPresent == 0)
    {
-      WriteDataPort(STATUS_COMPLETE | ERROR_NO_DATA);
+      WriteResult(STATUS_COMPLETE | ERROR_NO_DATA);
       return;
    }
 
@@ -730,7 +730,7 @@ void wfnExecuteArbitrary(void)
             globalData[n] = ReadEEPROM(i);
          }
 
-         WriteDataPort(STATUS_OK);
+         WriteResult(STATUS_OK);
       }
       break;
 
@@ -747,7 +747,7 @@ void wfnExecuteArbitrary(void)
             WriteEEPROM(i,globalData[n]);
          }
 
-         WriteDataPort(STATUS_OK);
+         WriteResult(STATUS_OK);
       }
       break;
    }

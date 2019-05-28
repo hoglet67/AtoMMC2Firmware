@@ -457,4 +457,18 @@ void at_process(void)
    {
       worker();
    }
+
+#if (DEBUG_GLOBAL)
+   if ((LatchedAddress & 0x03) == CMD_REG) {
+      unsigned char *ptr;
+      int i;
+      ptr=globalData;
+      for (i=0; i<256;i++) {
+         log0("%02x ", *ptr++);
+         if (i%16 == 15) {
+            log0("\n");
+         }
+      }
+   }
+#endif
 }

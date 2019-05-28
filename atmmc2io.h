@@ -139,7 +139,11 @@ extern void redSignal(unsigned char);
 
 #endif
 
-#define WriteResult(value) 	{ int v = value; if (DEBUG_RESULT) log0("res=%02X\n",v); WriteDataPort(v); }
+#if DEBUG_RESULT
+#define WriteResult(value) { int v = value; log0("res=%02X\n",v); WriteDataPort(v); }
+#else
+#define WriteResult(value) WriteDataPort(value)
+#endif
 
 #define _IO
 #endif
