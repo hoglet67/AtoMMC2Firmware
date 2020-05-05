@@ -6,6 +6,8 @@
 #if (PLATFORM==PLATFORM_PIC)
 #include <p18cxxx.h>
 #elif (PLATFORM==PLATFORM_AVR)
+#else
+#include "ff.h"
 #endif
 
 #define VSN_MAJ 2
@@ -56,6 +58,9 @@ typedef struct
 {
    char filename[13];
    unsigned char attribs;
+#if (PLATFORM==PLATFORM_EMU)
+   FIL fp;
+#endif
 }
 imgInfo;
 
