@@ -19,11 +19,11 @@
 
 
 #pragma udata windowbuf
-char windowData[512];
+unsigned char windowData[512];
 #pragma udata
 
 #pragma udata globalbuf
-char globalData[256];
+unsigned char globalData[256];
 #pragma udata
 
 BYTE configByte;
@@ -193,9 +193,12 @@ void main(void)
 	
    at_initprocessor();
 
+   // wait for first access before de-asserting irq
+   //
+   PIR1bits.PSPIF = 0;
+   while (PIR1bits.PSPIF == 0){}
    RELEASEIRQ();
-
-    _asm nop _endasm;
+   at_process();
 
 doneprocessing:
    ACTIVITYSTROBE(1);

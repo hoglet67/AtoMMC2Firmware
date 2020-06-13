@@ -1,5 +1,6 @@
 *~
 \#*
+*.o
 *.cod
 *.cof
 *.hex
@@ -9,9 +10,11 @@
 *.zip
 *.bin
 avr_progmem*
+*.err
 intermediate/
 bootloader-bin/
 BootUpdater-bin/
+picfirmware-bin/
 java/pichextobin/bin/
 java/pichextobin/build/
 java/pichextobin/pichextobin.jar

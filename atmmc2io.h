@@ -30,13 +30,13 @@
 
 #define LatchAddressIn()		{ LatchedAddressLast=PORTA; }
 #define ReadDataPort()
-#define WriteDataPort(value)	{ LATD=value; }	
+#define WriteDataPort(value)	{ LATD=value; }
 
 #define IODDR TRISB
 #define IOPORT_R PORTB
 #define IOPORT_W LATB
 
-extern void redSignal(unsigned char);
+extern void redSignal(char);
 
 #elif (PLATFORM==PLATFORM_AVR)
 #include <avr/io.h>
@@ -74,7 +74,7 @@ extern void redSignal(unsigned char);
 
 /* OE line from input latch */
 #define	OEPORT	PORTB
-#define	OE		0		
+#define	OE		0
 #define OEMASK	(1 << OE)
 #define OEDDR	DDRB
 
@@ -83,7 +83,7 @@ extern void redSignal(unsigned char);
 
 /* LE line for output latch */
 #define	LEPORT		PORTB
-#define	LE			1		
+#define	LE			1
 #define LEMASK		(1 << LE)
 #define LEDDR		DDRB
 
@@ -104,13 +104,13 @@ extern void redSignal(unsigned char);
 
 #define LatchAddressIn()			{ SelectAddr(); SetIORead(); AssertOE(); NOPDelay(); LatchedAddressLast=DATAPIN; ClearOE(); }
 #define ReadDataPort()				{ SelectData(); SetIORead(); AssertOE(); NOPDelay(); LatchedData=DATAPIN; ClearOE(); }
-#define WriteDataPort(value)		{ SelectData(); SetIOWrite(); DATAPORT=value; AssertLE(); ClearLE(); }	
+#define WriteDataPort(value)		{ SelectData(); SetIOWrite(); DATAPORT=value; AssertLE(); ClearLE(); }
 
-#define AddressPORT	
+#define AddressPORT
 
-#define WASWRITE		((LatchedAddressLast & AtomRWMask)==0) 
+#define WASWRITE		((LatchedAddressLast & AtomRWMask)==0)
 
-#define ReadEEPROM(addr)		eeprom_read_byte ((const uint8_t *)(addr))	
+#define ReadEEPROM(addr)		eeprom_read_byte ((const uint8_t *)(addr))
 #define WriteEEPROM(addr, val)	eeprom_write_byte ((uint8_t *)(addr), (uint8_t)(val))
 
 #define IODDR DDRE
