@@ -167,7 +167,13 @@ void main(void)
    //
    ADCON1 = 0b00001111;
    CMCON = 0x07;
+   
+// DMB: The AtoMMC3plus board moves IRQ to RA4 to free up RC6/7 for serial
+#ifdef ATOMMC3PLUS
+   TRISA = 0b11001111;
+#else   
    TRISA = 0b11011111;
+#endif
 
    // enable PSP
    //

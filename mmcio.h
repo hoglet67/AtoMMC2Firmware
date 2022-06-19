@@ -9,11 +9,24 @@
 #define SPI_CS_PIN PORTCbits.RC2
 #define SPI_CS_TRIS TRISCbits.TRISC2
 
+// DMB: The AtoMMC3plus board swaps RC4/5 (MISO/MOSI)
+#ifdef ATOMMC3PLUS
+
+#define SPI_DIN_PIN PORTCbits.RC4
+#define SPI_DIN_TRIS TRISCbits.TRISC4
+
+#define SPI_DOUT_PIN PORTCbits.RC5
+#define SPI_DOUT_TRIS TRISCbits.TRISC5
+
+#else
+
 #define SPI_DIN_PIN PORTCbits.RC5
 #define SPI_DIN_TRIS TRISCbits.TRISC5
 
 #define SPI_DOUT_PIN PORTCbits.RC4
 #define SPI_DOUT_TRIS TRISCbits.TRISC4
+
+#endif
 
 #define SPI_SCK_PIN   PORTCbits.RC3
 #define SPI_SCK_TRIS  TRISCbits.TRISC3

@@ -11,6 +11,6 @@ mkdir intermediate
 rm -rf picfirmware-bin
 mkdir picfirmware-bin
 ./genbuild.sh
-./PICFirmware-build2.sh 25 5
+./PICFirmware-build2.sh 25 5 -DATOMMC3PLUS
 
 # rmdir -rf intermediate

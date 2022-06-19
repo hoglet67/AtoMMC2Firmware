@@ -8,8 +8,14 @@
 #elif (PLATFORM==PLATFORM_AVR)
 #endif
 
+// DMB: The AtoMMC3plus should have a different version
+#ifdef ATOMMC3PLUS
+#define VSN_MAJ 3
+#define VSN_MIN 0
+#else
 #define VSN_MAJ 2
 #define VSN_MIN 13
+#endif
 
 #define SECBUFFSIZE 512
 #define GLOBUFFSIZE 256
