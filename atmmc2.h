@@ -8,12 +8,12 @@
 #elif (PLATFORM==PLATFORM_AVR)
 #endif
 
+#define VSN_MAJ 2
+
 // DMB: The AtoMMC3plus should have a different version
 #ifdef ATOMMC3PLUS
-#define VSN_MAJ 3
-#define VSN_MIN 0
+#define VSN_MIN 14
 #else
-#define VSN_MAJ 2
 #define VSN_MIN 13
 #endif
 
