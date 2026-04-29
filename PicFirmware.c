@@ -173,6 +173,11 @@ void main(void)
    //
    TRISE = 0b00010111;
 
+#ifdef ATOMMC3PLUS
+   // Disable the MSSP Hardware as this firmware uses bit banging to interface with the SD card
+   SSPCON1 = 0b00000000;
+#endif
+
    REDLEDOFF();
    GREENLEDOFF();
 
@@ -190,7 +195,7 @@ void main(void)
    TRISB = ReadEEPROM(EE_PORTBTRIS);
 
 	INTCON2bits.RBPU=0;
-	
+
    at_initprocessor();
 
    // wait for first access before de-asserting irq
