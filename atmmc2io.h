@@ -12,8 +12,14 @@
 #define GREENLEDON() PORTCbits.RC1 = 1;
 #define GREENLEDOFF() PORTCbits.RC1 = 0;
 
+// DMB: The AtoMMC3plus board moves IRQ to RA4 to free up RC6/7 for serial
+#ifdef ATOMMC3PLUS
+#define ASSERTIRQ()  PORTAbits.RA4 = 0; TRISAbits.TRISA4 = 0;
+#define RELEASEIRQ() TRISAbits.TRISA4 = 1;
+#else
 #define ASSERTIRQ()  PORTCbits.RC6 = 0; TRISCbits.TRISC6 = 0;
 #define RELEASEIRQ() TRISCbits.TRISC6 = 1;
+#endif
 
 #define ACTIVITYSTROBE(x) LATAbits.LATA5 = x;
 

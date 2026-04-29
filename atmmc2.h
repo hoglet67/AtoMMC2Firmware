@@ -12,7 +12,7 @@
 
 // DMB: The AtoMMC3plus should have a different version
 #ifdef ATOMMC3PLUS
-#define VSN_MIN 14
+#define VSN_MIN 15
 #else
 #define VSN_MIN 13
 #endif

@@ -167,7 +167,12 @@ void main(void)
    //
    ADCON1 = 0b00001111;
    CMCON = 0x07;
+
+#ifndef ATOMMC3PLUS
+   // DON'T change TRISA for ATOMMC3PLUS as it will release IRQ early,
+   // re-introducing the initialization race condition.
    TRISA = 0b11011111;
+#endif
 
    // enable PSP
    //
