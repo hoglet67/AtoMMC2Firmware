@@ -10,9 +10,12 @@
 
 #define VSN_MAJ 2
 
-// DMB: The AtoMMC3plus should have a different version
-#ifdef ATOMMC3PLUS
+// DMB: The AtoMMC3plus has version 2F
+// DMB: The AtoMMC3minus has version 2E
+#if defined(ATOMMC3PLUS)
 #define VSN_MIN 15
+#elif defined(ATOMMC3MINUS)
+#define VSN_MIN 14
 #else
 #define VSN_MIN 13
 #endif
