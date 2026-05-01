@@ -21,28 +21,28 @@ the Acorn Atom itself:
 ## History of AtoMMC
 
 In 2008 Charlie Robson started work on an MMC card based file system
-for the Acorn Atom. The initial version connected used an MMC card
-connected to the Atom's 6522.
+for the Acorn Atom. The initial version used an MMC card connected to
+the Atom's 6522.
 
 For more information on AtoMMC V1 see:
 * <https://arduinonut.blogspot.com/search/label/acorn%20atom>
 
-In 2010 Charlie released V2 board that connects to the Atom's internal
-PL8 connector and uses a PIC Microcontroller to interface an SD card
-to the Acorn Atom. This on-board controller runs a stack built on
-FatFS, allowing the SD card to use a standard FAT filesystem. Over the
-next 10 years, many AtoMMC V2 boards were sold to members of the Acorn
-community.
+In 2010 Charlie released a V2 board that connected to the Atom's
+internal PL8 connector and used a PIC Microcontroller to interface an
+SD card to the Acorn Atom. This on-board controller runs a stack built
+on FatFS, allowing the SD card to use a standard FAT filesystem. Over
+the next 10 years, many AtoMMC V2 boards were sold to members of the
+Acorn community.
 
 For more information on AtoMMC V2 see:
 * <https://www.acornatom.nl/sites/atomreview/sd-files/atommmc2.html>
 
-In 2020 a V3 board was released that swaps the MISO/MOSI signals on
+In 2020 a V3 board was released that swaped the MISO/MOSI signals on
 the PIC, correcting an oversight with the V2 design. With this change
-it's possible to use the PIC's MSSP hardware to access the SD
-Card, rather than big-banging as was done in V2.
+it is possible to use the PIC's MSSP hardware to access the SD Card,
+rather than big-banging as was done in V2.
 
-Later in 2020, a revised V3 board was released that moves IRQ/NMI from
+Later in 2020, a revised V3 board was released that moved IRQ/NMI from
 RC6/7 (pins 25/26) to RA4/3 (pins 5/4). The allows RC6/7 to be used as
 a serial port for debugging.
 
@@ -50,7 +50,7 @@ In this document, the first V3 board will be referred to as V3MINUS
 and the second V3 board as V3PLUS.
 
 It was hoped that all the boards "in the wild" would be V3PLUS boards,
-but a small number of V3MINUS boards seem to been sold as well.
+but a small number of V3MINUS boards seem to have been sold as well.
 
 The V3 design (specifically the V3PLUS) was released under an open
 source licence and the official PCB and 3.0 firmware is available in a
@@ -62,10 +62,10 @@ electrically identical to the V3PLUS:
 * <https://site.acornatom.nl/hardware/storage/atommc-v4/>
 * <https://stardot.org.uk/forums/viewtopic.php?t=20836>
 
-It's recommended that users with the V3MINUS, V3PLUS and V4 boards use
-the use the firmware from Charlie's atommc-v3 repository, as this uses
-PIC's MSSP hardware to access the SD Card.  This approximately doubles
-the system performance.
+It's recommended that users with the V3MINUS, V3PLUS and V4 boards
+install the newer firmware from Charlie's atommc-v3 repository. By
+using the PIC’s MSSP hardware for SD card access, this version
+effectively doubles system performance.
 
 However, mostly for testing purposes, the V2 firmware in this
 repository also supports the newer hardware, though with slower
@@ -73,14 +73,14 @@ performance.
 
 ## Archived releases
 
-There is an archive of the community firmware builds in the releases/
-directory.
+This repositoru included an archive of the community firmware binary
+builds in the releases/ directory.
 
 ### releases/picfirmware:
 
 This directory contains archived copies of the main firmware.
 
-Versions 29-2D are for the original V2 hardware:
+Versions 29-2D are for the V2 hardware:
 * 29 - built from Charlie's 2.9 sources
 * 2A - various development builds (kees and hoglet)
 * 2B - stable release: added support for random access files
@@ -95,18 +95,17 @@ Version 2F is a back port for the V3PLUS (and V4) hardware
 
 ### releases/bootloader:
 
-This directory contains archived copes of the boot loader
-firmware. This boot loader should only be used on the original V2
-hardare. I believe the 20, 21 and 29 boot loader are functionally the
-same, only the version number changed to keep it in lock-step with the
-main firmware.
+This directory contains archived copies of the boot loader
+firmware. This boot loader should only be used on the V2 hardare. I
+believe the 20, 21 and 29 boot loader are functionally the same, only
+the version number changed to keep it in lock-step with the main
+firmware.
 
 ### releases/bootupdater:
 
 This directory contains archived copies of the boot loader
 updater. This acts as temporary main firmware, allowing the boot
-loader to be updated. This should only be uses on the original V2
-hardware.
+loader to be updated. This should only be used on the V2 hardware.
 
 ## License
 
