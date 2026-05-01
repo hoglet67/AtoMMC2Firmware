@@ -7,6 +7,7 @@
 *.lst
 *.map
 *.err
+buildnumber.h
 intermediate/
 bootloader-bin/
 BootUpdater-bin/
