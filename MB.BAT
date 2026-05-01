@@ -8,15 +8,21 @@ rmdir /s /q intermediate
 mkdir intermediate
 rmdir /s /q picfirmware-bin
 mkdir picfirmware-bin
-call genbuild
+
+rem call genbuild
+
+SET "BUILD=#define BUILDNUMBER movff 0"
 
 rem To build firmware 2D for the V2 hardware
+@echo %BUILD,70> buildnumber.h
 call picfirmware-build2.bat 25 5
 
 rem To build firmware 2E for the V3Pre hardware
+rem @echo %BUILD,71> buildnumber.h
 rem call picfirmware-build2.bat 25 5 -DATOMMC3MINUS
 
 rem To build firmware 2F for the V3/V4 hardware
+rem @echo %BUILD,72> buildnumber.h
 rem call picfirmware-build2.bat 25 5 -DATOMMC3PLUS
 
 rem rmdir /s /q intermediate
