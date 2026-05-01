@@ -9,11 +9,24 @@
 #define SPI_CS_PIN PORTCbits.RC2
 #define SPI_CS_TRIS TRISCbits.TRISC2
 
+// DMB: The AtoMMC3Minus and AtoMMC3Plus boards both swaps RC4/5 (MISO/MOSI)
+#if defined(ATOMMC3MINUS) || defined(ATOMMC3PLUS)
+
+#define SPI_DIN_PIN PORTCbits.RC4
+#define SPI_DIN_TRIS TRISCbits.TRISC4
+
+#define SPI_DOUT_PIN PORTCbits.RC5
+#define SPI_DOUT_TRIS TRISCbits.TRISC5
+
+#else
+
 #define SPI_DIN_PIN PORTCbits.RC5
 #define SPI_DIN_TRIS TRISCbits.TRISC5
 
 #define SPI_DOUT_PIN PORTCbits.RC4
 #define SPI_DOUT_TRIS TRISCbits.TRISC4
+
+#endif
 
 #define SPI_SCK_PIN   PORTCbits.RC3
 #define SPI_SCK_TRIS  TRISCbits.TRISC3
@@ -39,7 +52,7 @@
 
 #define AsertSS()	{ SPIPORT &= ~SPI_SS_MASK; };
 #define ClearSS()	{ SPIPORT |= SPI_SS_MASK; };
-#define WaitSPI()	{ while(!(SPSR & (1<<SPIF))); }; 
+#define WaitSPI()	{ while(!(SPSR & (1<<SPIF))); };
 
 #define SELECT()   { SPIPORT &= ~SPI_SS_MASK; }
 #define DESELECT() { SPIPORT |= SPI_SS_MASK; }
@@ -63,4 +76,3 @@
 
 #define _MMC
 #endif
-

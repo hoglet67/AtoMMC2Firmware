@@ -167,11 +167,21 @@ void main(void)
    //
    ADCON1 = 0b00001111;
    CMCON = 0x07;
+
+#ifndef ATOMMC3PLUS
+   // DON'T change TRISA for ATOMMC3PLUS as it will release IRQ early,
+   // re-introducing the initialization race condition.
    TRISA = 0b11011111;
+#endif
 
    // enable PSP
    //
    TRISE = 0b00010111;
+
+#if defined(ATOMMC3MINUS) || defined(ATOMMC3PLUS)
+   // Disable the MSSP Hardware as this firmware uses bit banging to interface with the SD card
+   SSPCON1 = 0b00000000;
+#endif
 
    REDLEDOFF();
    GREENLEDOFF();
@@ -190,7 +200,7 @@ void main(void)
    TRISB = ReadEEPROM(EE_PORTBTRIS);
 
 	INTCON2bits.RBPU=0;
-	
+
    at_initprocessor();
 
    // wait for first access before de-asserting irq
