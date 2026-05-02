@@ -62,10 +62,20 @@ electrically identical to the V3PLUS:
 * <https://site.acornatom.nl/hardware/storage/atommc-v4/>
 * <https://stardot.org.uk/forums/viewtopic.php?t=20836>
 
-It's recommended that users with the V3MINUS, V3PLUS and V4 boards
-install the newer firmware from Charlie's atommc-v3 repository. By
-using the PIC’s MSSP hardware for SD card access, this version
-effectively doubles system performance.
+In 2022, Ken Lowe created a Combo AtoMMC / Econet board. This is also
+electrically equivalent to the V3PLUS (and Roland's V4) boards, so can
+run the same 3.0 firmware. This design is also open source; more
+details can be found here:
+* <https://github.com/kgl2001/Atom_Econet_AtoMMC>
+
+It's recommended that users with the V3PLUS and later boards run the
+newer 3.0 firmware from Charlie's atommc-v3 repository. By using the
+PIC’s MSSP hardware for SD card access, this version effectively
+doubles system performance.
+
+It's recommended that users of the V3MINUS board (very few of which
+exist) stick with what ever original firmware is on the board, or seek
+further advice on the stardot forums.
 
 However, mostly for testing purposes, the V2 firmware in this
 repository also supports the newer hardware, though with slower
@@ -73,7 +83,7 @@ performance.
 
 ## Archived releases
 
-This repositoru included an archive of the community firmware binary
+This repository included an archive of the community firmware binary
 builds in the releases/ directory.
 
 ### releases/picfirmware:
