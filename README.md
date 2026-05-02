@@ -35,6 +35,7 @@ the next 10 years, many AtoMMC V2 boards were sold to members of the
 Acorn community.
 
 For more information on AtoMMC V2 see:
+* <https://github.com/charlierobson/atommc2-vitamins/wiki/The-Fine-Manual>
 * <https://www.acornatom.nl/sites/atomreview/sd-files/atommmc2.html>
 
 In 2020 a V3 board was released that swaped the MISO/MOSI signals on
