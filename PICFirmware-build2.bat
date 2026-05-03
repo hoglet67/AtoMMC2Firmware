@@ -1,4 +1,5 @@
 set MCC=%MCC_INCLUDE%\..\
+set DISOPT=-O-
 
 if "%MCC%"=="\..\" (
  echo Environment variable MCC is not set.
